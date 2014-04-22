@@ -100,7 +100,11 @@
         placeholder:'Plz select...',
       loader: function(term, page, callback) {
         setTimeout(function () {
-          var matched = everybody.filter(function (i) { return ~i.actor.toLowerCase().indexOf(term.toLowerCase()) || ~i.character.toLowerCase().indexOf(term.toLowerCase())});
+          var matched = everybody.filter(function (query) {
+            var actorMatches = term.actor ? ~query.actor.toLowerCase().indexOf(term.actor.toLowerCase()) : true
+            var characterMatches = term.character ? ~query.character.toLowerCase().indexOf(term.character.toLowerCase()) : true
+            return actorMatches && characterMatches
+          })
           callback(matched.slice(page * 10, 10 + page * 10))
         }, 10)
       },
@@ -110,6 +114,22 @@
         },
         renderItem: function (item, term) {
           return [$('<td>').text(item.actor), $('<td>').text(item.character)]
+        },
+        renderSearch: function () {
+          return $('<table>')
+            .append($('<tr>')
+              .append($('<td>')
+                .append($('<input>').attr('type', 'text').attr('name', 'actor')))
+              .append($('<td>')
+                .append($('<input>').attr('type', 'text').attr('name', 'character')))
+          )
+        },
+        queryExtractor: function($search) {
+          return function() {
+            var query = { actor: $search.find('input[name="actor"]').val(), character: $search.find('input[name="character"]').val()};
+            console.log('searching with', query)
+            return  query
+          }
         }
       })
     }
