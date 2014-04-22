@@ -69,7 +69,6 @@
       })
       $search.keydown(function(e) {
         switch (e.which) {
-          case keys.tab: e.preventDefault(); hide(); return;
           case keys.up: e.preventDefault(); listNavigator.prev(); return;
           case keys.down: e.preventDefault(); listNavigator.next(); return;
         }
