@@ -21,7 +21,10 @@
     renderItem: defaultRenderItem,
     noResults: defaultNoResults,
     regexpMatcher: defaultRegexpMatcher,
-    selectOnMouseEnter: true
+    selectOnMouseEnter: true,
+    renderSearch: function () { return $('<input>').addClass('zearch') },
+    queryExtractor: function ($search) {return function () { return $search.val() }},
+    itemPrefix: 'li'
   }
 
   $.fn.zelect = function(opts) {
@@ -35,9 +38,11 @@
       var $selected = $('<div>').addClass('zelected')
       var $dropdown = $('<div>').addClass('dropdown').hide()
       var $noResults = $('<div>').addClass('no-results')
-      var $search = $('<input>').addClass('zearch')
+      var $search = opts.renderSearch()
       var $list = $('<ol>')
-      var listNavigator = navigable($list, opts.selectOnMouseEnter, $select)
+      var itemPrefix = opts.itemPrefix
+      var queryExtractor = opts.queryExtractor($search)
+      var listNavigator = navigable($list, opts.selectOnMouseEnter, $select, itemPrefix)
 
       var itemHandler = opts.loader
         ? infiniteScroll($list, opts.loader, appendItem)
@@ -86,7 +91,7 @@
         .append($selected)
         .append($dropdown.append($('<div>').addClass('zearch-container').append($search).append($noResults)).append($list))
 
-      itemHandler.load($search.val(), function() {
+      itemHandler.load(queryExtractor(), function() {
         initialSelection(true)
         $select.trigger('ready')
       })
@@ -287,17 +292,17 @@
   function navigable($list, selectOnMouseEnter, $select) {
     var skipMouseEvent = false
     if(selectOnMouseEnter) {
-      $list.on('mouseenter', 'li:not(.disabled)', onMouseEnter)
+      $list.on('mouseenter', itemPrefix + ':not(.disabled)', onMouseEnter)
     } else {
-      $list.on('click', 'li:not(.disabled)', onMouseClick)
+      $list.on('click', itemPrefix + ':not(.disabled)', onMouseClick)
     }
 
     function next() {
-      var $next = current().next('li:not(.disabled)')
+      var $next = current().next(itemPrefix + ':not(.disabled)')
       if (set($next)) ensureBottomVisible($next)
     }
     function prev() {
-      var $prev = current().prev('li:not(.disabled)')
+      var $prev = current().prev(itemPrefix + ':not(.disabled)')
       if (set($prev)) ensureTopVisible($prev)
     }
     function current() {
@@ -307,9 +312,9 @@
       if (current().size() === 0) {
         var selected = $select.data('zelected')
         if (selected) {
-          $list.find('li:not(.disabled):contains('+selected.value+')').addClass('current')
+          $list.find(itemPrefix + ':not(.disabled):contains('+selected.value+')').addClass('current')
         } else {
-          $list.find('li:not(.disabled)').eq(0).addClass('current')
+          $list.find(itemPrefix + ':not(.disabled)').eq(0).addClass('current')
         }
       }
     }
