@@ -127,6 +127,7 @@
           $search.focus().select()
           itemHandler.check()
           listNavigator.ensure()
+          listNavigator.ensureTopVisible($list.find(':first'))
         }
       }
 
@@ -164,7 +165,7 @@
           selectItem($list.children().eq($s.index()).data('zelect-item'))
         } else if (opts.placeholder) {
           $selected.html(opts.placeholder).addClass('placeholder')
-          $list.find('li').first().addClass('current')
+          $list.find(':first').addClass('current')
         } else {
           var first = $list.find(':first').data('zelect-item')
           first !== undefined && first !== null ? selectItem(first) : $selected.html(opts.noResults()).addClass('placeholder')
@@ -346,6 +347,6 @@
       $list.scrollTop(offset)
       skipMouseEvent = true
     }
-    return { next:next, prev:prev, current:current, ensure:ensure }
+    return { next:next, prev:prev, current:current, ensure:ensure, ensureTopVisible:ensureTopVisible }
   }
 })(jQuery)
