@@ -152,7 +152,7 @@
           $noResults.hide()
           listNavigator.ensure()
         }
-      }
+        }
       function searchTerm() { return $.trim($search.val()) }
 
       function initialSelection(useOptsInitial) {
@@ -163,6 +163,7 @@
           selectItem($list.children().eq($s.index()).data('zelect-item'))
         } else if (opts.placeholder) {
           $selected.html(opts.placeholder).addClass('placeholder')
+          $list.find('li').first().addClass('current')
         } else {
           var first = $list.find(':first').data('zelect-item')
           first !== undefined && first !== null ? selectItem(first) : $selected.html(opts.noResults()).addClass('placeholder')
