@@ -138,7 +138,7 @@
       function renderContent($obj, content) {
         $obj[htmlOrText(content)](content)
         return $obj
-        function htmlOrText(x) { return (x instanceof jQuery || x.nodeType != null) ? 'html' : 'text' }
+        function htmlOrText(x) { return (x instanceof $ || x.nodeType != null) ? 'html' : 'text' }
       }
 
       function appendItem(item, term) {
