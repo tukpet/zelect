@@ -8,7 +8,7 @@
     "mocha": "2.1.x",
     "chai": "2.0.x",
     "underscore": "1.4.x",
-    "mocha-phantomjs": "1.0.x"
+    "mocha-phantomjs": "3.5.x"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha-phantomjs ./test.html"
