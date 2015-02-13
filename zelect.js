@@ -152,7 +152,8 @@
           $noResults.hide()
           listNavigator.ensure()
         }
-        }
+      }
+
       function searchTerm() { return $.trim($search.val()) }
 
       function initialSelection(useOptsInitial) {
@@ -305,14 +306,7 @@
       return $list.find('.current')
     }
     function ensure() {
-      if (current().size() === 0) {
-        var selected = $select.data('zelected')
-        if (selected) {
-          $list.find('li:not(.disabled):contains('+selected.value+')').addClass('current')
-        } else {
-          $list.find('li:not(.disabled)').eq(0).addClass('current')
-        }
-      }
+      if (current().size() === 0) { $list.find('li:not(.disabled)').eq(0).addClass('current') }
     }
     function set($item) {
       if ($item.size() === 0) return false
