@@ -311,8 +311,11 @@
     }
     function set($item) {
       if ($item.size() === 0) return false
-      current().removeClass('current')
+      var $currentItem = current()
+      $currentItem.removeClass('current')
+      $select.trigger('mouseout', $currentItem.data('zelect-item'))
       $item.addClass('current')
+      $select.trigger('mouseover', $item.data('zelect-item'))
       return true
     }
     function onMouseEnter() {
