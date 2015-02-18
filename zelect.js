@@ -2,17 +2,18 @@
   zelect-0.0.9
 
   opts:
-    throttle:       ms: delay to throttle filtering of results when search term updated, 0 means synchronous
-    loader:         function(term, page, callback): load more items
-                      callback expects an array of items
-    renderItem:     function(item, term): render the content of a single item
-    initial:        "item": arbitrary item to set the initial selection to
-                      placeholder is not required if initial item is provided
-    placeholder:    String/DOM/jQuery: placeholder text/html before anything is selected
-                      zelect automatically selects first item if not provided
-    noResults:      function(term?): function to create no results text
-    regexpMatcher:  function(term): override regexp creation when filtering options
+    throttle:           ms: delay to throttle filtering of results when search term updated, 0 means synchronous
+    loader:             function(term, page, callback): load more items
+                        callback expects an array of items
+    renderItem:         function(item, term): render the content of a single item
+    initial:            "item": arbitrary item to set the initial selection to
+                        placeholder is not required if initial item is provided
+    placeholder:        String/DOM/jQuery: placeholder text/html before anything is selected
+                        zelect automatically selects first item if not provided
+    noResults:          function(term?): function to create no results text
+    regexpMatcher:      function(term): override regexp creation when filtering options
     selectOnMouseEnter: set selection when hovering on an item
+    resetWhenOpened:    zelect automatically resets selection state if 'true'
 */
 (function($) {
   var keys = { tab:9, enter:13, esc:27, left:37, up:38, right:39, down:40 }
@@ -21,7 +22,8 @@
     renderItem: defaultRenderItem,
     noResults: defaultNoResults,
     regexpMatcher: defaultRegexpMatcher,
-    selectOnMouseEnter: true
+    selectOnMouseEnter: true,
+    resetWhenOpened: false
   }
 
   $.fn.zelect = function(opts) {
@@ -124,11 +126,11 @@
         $dropdown.toggle()
         $zelect.toggleClass('open')
         if ($dropdown.is(':visible')) {
+          if (opts.resetWhenOpened) reset()
           $search.focus().select()
           itemHandler.check()
-          listNavigator.ensure()
+          listNavigator.ensure(true)
           listNavigator.ensureTopVisible($list.find(':first'))
-          $select.trigger('mouseover', listNavigator.current().data('zelect-item'))
         } else {
           $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
         }
@@ -310,9 +312,12 @@
     function current() {
       return $list.find('.current')
     }
-    function ensure() {
-      if (current().size() === 0) {
+    function ensure(triggerMouseover) {
+      var $current = current()
+      if ($current.size() === 0) {
         set($list.find('li:not(.disabled)').eq(0))
+      } else if (triggerMouseover) {
+        $select.trigger('mouseover', $current.data('zelect-item'))
       }
     }
     function set($item) {
