@@ -128,12 +128,16 @@
           itemHandler.check()
           listNavigator.ensure()
           listNavigator.ensureTopVisible($list.find(':first'))
+          $select.trigger('mouseover', listNavigator.current().data('zelect-item'))
+        } else {
+          $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
         }
       }
 
       function hide() {
         $dropdown.hide()
         $zelect.removeClass('open')
+        $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
       }
 
       function renderContent($obj, content) {
