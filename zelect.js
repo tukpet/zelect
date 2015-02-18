@@ -307,7 +307,9 @@
       return $list.find('.current')
     }
     function ensure() {
-      if (current().size() === 0) { $list.find('li:not(.disabled)').eq(0).addClass('current') }
+      if (current().size() === 0) {
+        set($list.find('li:not(.disabled)').eq(0))
+      }
     }
     function set($item) {
       if ($item.size() === 0) return false
