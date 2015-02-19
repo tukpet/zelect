@@ -323,8 +323,10 @@
     function set($item) {
       if ($item.size() === 0) return false
       var $currentItem = current()
-      $currentItem.removeClass('current')
-      $select.trigger('mouseout', $currentItem.data('zelect-item'))
+      if ($currentItem.size() > 0) {
+        $currentItem.removeClass('current')
+        $select.trigger('mouseout', $currentItem.data('zelect-item'))
+      }
       $item.addClass('current')
       $select.trigger('mouseover', $item.data('zelect-item'))
       return true
