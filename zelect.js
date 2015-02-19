@@ -139,7 +139,7 @@
       function hide() {
         $dropdown.hide()
         $zelect.removeClass('open')
-        $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
+        if ($selected.hasClass('placeholder')) $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
       }
 
       function renderContent($obj, content) {
