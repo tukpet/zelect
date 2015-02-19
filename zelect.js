@@ -132,7 +132,7 @@
           listNavigator.ensure(true)
           listNavigator.ensureTopVisible($list.find(':first'))
         } else {
-          $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
+          if ($selected.hasClass('placeholder')) $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
         }
       }
 
