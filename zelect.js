@@ -132,14 +132,14 @@
           listNavigator.ensure(true)
           listNavigator.ensureTopVisible($list.find(':first'))
         } else {
-          $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
+          if ($selected.hasClass('placeholder')) $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
         }
       }
 
       function hide() {
         $dropdown.hide()
         $zelect.removeClass('open')
-        $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
+        if ($selected.hasClass('placeholder')) $select.trigger('mouseout', listNavigator.current().data('zelect-item'))
       }
 
       function renderContent($obj, content) {
