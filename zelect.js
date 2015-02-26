@@ -90,10 +90,14 @@
         .append($selected)
         .append($dropdown.append($('<div>').addClass(prefixedClassName('zelect__zearchContainer')).append($search).append($noResults)).append($list))
 
-      itemHandler.load($search.val(), function() {
-        initialSelection(true)
-        $select.trigger('ready')
-      })
+      if (opts.initial) { // TODO: refactor to more intuitive form
+        itemHandler.load($search.val(), function () {
+          initialSelection(true)
+          $select.trigger('ready')
+        })
+      } else if (opts.placeholder) {
+        usePlaceholder()
+      }
 
       function selectItem(item, triggerChange) {
         renderContent($selected, opts.renderItem(item)).removeClass(prefixedClassName('zelect__placeholder'))
@@ -172,7 +176,7 @@
         } else if (!opts.loader && $s.size() > 0) {
           selectItem($list.children().eq($s.index()).data('zelect-item'))
         } else if (opts.placeholder) {
-          $selected.html(opts.placeholder).addClass(prefixedClassName('zelect__placeholder'))
+          usePlaceholder()
           $list.find(':first').addClass(prefixedClassName('zelect__dropdown__current'))
         } else {
           var first = $list.find(':first').data('zelect-item')
@@ -180,6 +184,8 @@
         }
         checkResults()
       }
+
+      function usePlaceholder() { $selected.html(opts.placeholder).addClass(prefixedClassName('zelect__placeholder')) }
     })
 
     function prefixedClassName(className) { return opts.cssClassPrefix + className }
