@@ -47,10 +47,10 @@
         ? infiniteScroll($list, opts.loader, appendItem)
         : selectBased($select, $list, opts.regexpMatcher, appendItem)
 
-      var filter = throttled(opts.throttle, function() {
+      var filter = debounced(function() {
         var term = searchTerm()
         itemHandler.load(term, function() { checkResults(term) })
-      })
+      }, opts.throttle)
 
       $search.keyup(function(e) {
         switch (e.which) {
@@ -345,12 +345,15 @@
     }
   }
 
-  function throttled(ms, callback) {
-    if (ms <= 0) return callback
-    var timeout = undefined
+  function debounced(callback, wait) {
+    var timeout
     return function() {
+      var later = function() {
+        timeout = null
+        callback()
+      }
       if (timeout) clearTimeout(timeout)
-      timeout = setTimeout(callback, ms)
+      timeout = setTimeout(later, wait)
     }
   }
 
