@@ -164,6 +164,7 @@
         } else {
           $noResults.hide()
           listNavigator.ensure()
+          listNavigator.ensureTopVisible($list.find(':first'))
         }
       }
 
