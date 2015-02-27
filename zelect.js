@@ -83,7 +83,7 @@
 
       $('body').on('click.closeZelect', function(evt) {
         var clickWasOutsideZelect = $(evt.target).closest($zelect).length === 0
-        if (clickWasOutsideZelect) hide()
+        if (clickWasOutsideZelect && $dropdown.is(':visible')) hide()
       })
 
       $zelect.insertAfter($select)
