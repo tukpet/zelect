@@ -225,7 +225,7 @@
             if (stateId !== state.id) return
             if (state.page == 0) $list.empty()
             state.page++
-            if (!result || result.totalNumOfItems === 0) state.exhausted = true
+            if (!result || result.items.length === 0) state.exhausted = true
             $list.find('.' + dropdownFillerClassName).remove()
             $.each(result.items, function(ii, item) { appendItemFn(item, state.term) })
             addAreaFiller(result.totalNumOfItems, result.offset, result.items.length)
