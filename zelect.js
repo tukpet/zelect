@@ -42,6 +42,8 @@
       var $search = $('<input>').addClass(prefixedClassName('zelect__dropdown__zearch'))
       var $list = $('<ol>')
       var listNavigator = navigable($list, opts.selectOnMouseEnter, $select)
+      var dropdownFillerClassName = prefixedClassName('zelect__dropdown__filler')
+      var visibleItemSelector = 'li:not(.disabled,.' + dropdownFillerClassName + ')'
 
       var itemHandler = opts.loader
         ? infiniteScroll($list, opts.loader, appendItem)
@@ -187,149 +189,159 @@
       }
 
       function usePlaceholder() { $selected.html(opts.placeholder).addClass(prefixedClassName('zelect__placeholder')) }
+
+      function selectBased($select, $list, regexpMatcher, appendItemFn) {
+        var dummyRegexp = { test: function() { return true } }
+        var options = $select.find('option').map(function() { return itemFromOption($(this)) }).get()
+
+        function filter(term) {
+          var regexp = (term === '') ? dummyRegexp : regexpMatcher(term)
+          $list.empty()
+          $.each(options, function(ii, item) {
+            if (regexp.test(item.label)) appendItemFn(item, term)
+          })
+        }
+        function itemFromOption($option) {
+          return { value: $option.val(), label: $option.text(), disabled: $option.prop('disabled') }
+        }
+        function newTerm(term, callback) {
+          filter(term)
+          if (callback) callback()
+        }
+        return { load:newTerm, check:function() {} }
+      }
+
+      function infiniteScroll($list, loadFn, appendItemFn) {
+        var state = { id:0, term:'', page:0, loading:false, exhausted:false, callback:undefined }
+
+        $list.scroll(maybeLoadMore)
+
+        function load() {
+          if (state.loading || state.exhausted) return
+          state.loading = true
+          $list.addClass(prefixedClassName('loading'))
+          var stateId = state.id
+          loadFn(state.term, state.page, function(result) {
+            if (stateId !== state.id) return
+            if (state.page == 0) $list.empty()
+            state.page++
+            if (!result || result.totalNumOfItems === 0) state.exhausted = true
+            $list.find('.' + dropdownFillerClassName).remove()
+            $.each(result.items, function(ii, item) { appendItemFn(item, state.term) })
+            addAreaFiller(result.totalNumOfItems, result.offset, result.items.length)
+            state.loading = false
+            if (!maybeLoadMore()) {
+              if (state.callback) state.callback()
+              state.callback = undefined
+              $list.removeClass(prefixedClassName('loading'))
+            }
+          })
+        }
+
+        function maybeLoadMore() {
+          if (state.exhausted) return false
+          var $lastChild = $list.children(visibleItemSelector + ':last')
+          if ($lastChild.size() === 0) {
+            load()
+            return true
+          } else {
+            var lastChildTop = $lastChild.offset().top - $list.offset().top
+            var lastChildVisible = lastChildTop < $list.outerHeight()
+            if (lastChildVisible) load()
+            return lastChildVisible
+          }
+        }
+
+        function addAreaFiller(totalNumOfItems, offset, pageSize) {
+          var listItemHeight = $list.find(':first').outerHeight(true)
+          var postfixHeight = (totalNumOfItems - offset - pageSize)  * listItemHeight
+          if (postfixHeight > 0) $list.append($('<li/>').addClass(dropdownFillerClassName).height(postfixHeight))
+        }
+
+        function newTerm(term, callback) {
+          state = { id:state.id+1, term:term, page:0, loading:false, exhausted:false, callback:callback }
+          load()
+        }
+
+        return { load:newTerm, check:maybeLoadMore }
+      }
+
+      function navigable($list, selectOnMouseEnter, $select) {
+        var skipMouseEvent = false
+
+        if(selectOnMouseEnter) {
+          $list.on('mouseenter', visibleItemSelector, onMouseEnter)
+        } else {
+          $list.on('click', visibleItemSelector, onMouseClick)
+        }
+
+        function next() {
+          var $next = current().next(visibleItemSelector)
+          if (set($next)) ensureBottomVisible($next)
+        }
+        function prev() {
+          var $prev = current().prev(visibleItemSelector)
+          if (set($prev)) ensureTopVisible($prev)
+        }
+        function current() {
+          return $list.find('.' + prefixedClassName('zelect__dropdown__current'))
+        }
+        function ensure(triggerMouseover) {
+          var $current = current()
+          if ($current.size() === 0) {
+            set($list.find(visibleItemSelector).eq(0))
+          } else if (triggerMouseover) {
+            $select.trigger('mouseover', $current.data('zelect-item'))
+          }
+        }
+        function set($item) {
+          if ($item.size() === 0) return false
+          var $currentItem = current()
+          if ($currentItem.size() > 0) {
+            $currentItem.removeClass(prefixedClassName('zelect__dropdown__current'))
+            $select.trigger('mouseout', $currentItem.data('zelect-item'))
+          }
+          $item.addClass(prefixedClassName('zelect__dropdown__current'))
+          $select.trigger('mouseover', $item.data('zelect-item'))
+          return true
+        }
+        function onMouseEnter() {
+          if (skipMouseEvent) {
+            skipMouseEvent = false
+            return
+          }
+          set($(this))
+        }
+        function onMouseClick() {
+          set($(this))
+        }
+
+        function itemTop($item) {
+          return $item.offset().top - $list.offset().top
+        }
+        function ensureTopVisible($item) {
+          var scrollTop = $list.scrollTop()
+          var offset = itemTop($item) + scrollTop
+          if (scrollTop > offset) {
+            moveScroll(offset)
+          }
+        }
+        function ensureBottomVisible($item) {
+          var scrollBottom = $list.height()
+          var itemBottom = itemTop($item) + $item.outerHeight()
+          if (scrollBottom < itemBottom) {
+            moveScroll($list.scrollTop() + itemBottom - scrollBottom)
+          }
+        }
+        function moveScroll(offset) {
+          $list.scrollTop(offset)
+          skipMouseEvent = true
+        }
+        return { next:next, prev:prev, current:current, ensure:ensure, ensureTopVisible:ensureTopVisible }
+      }
     })
 
     function prefixedClassName(className) { return opts.cssClassPrefix + className }
-
-    function selectBased($select, $list, regexpMatcher, appendItemFn) {
-      var dummyRegexp = { test: function() { return true } }
-      var options = $select.find('option').map(function() { return itemFromOption($(this)) }).get()
-
-      function filter(term) {
-        var regexp = (term === '') ? dummyRegexp : regexpMatcher(term)
-        $list.empty()
-        $.each(options, function(ii, item) {
-          if (regexp.test(item.label)) appendItemFn(item, term)
-        })
-      }
-      function itemFromOption($option) {
-        return { value: $option.val(), label: $option.text(), disabled: $option.prop('disabled') }
-      }
-      function newTerm(term, callback) {
-        filter(term)
-        if (callback) callback()
-      }
-      return { load:newTerm, check:function() {} }
-    }
-
-    function infiniteScroll($list, loadFn, appendItemFn) {
-      var state = { id:0, term:'', page:0, loading:false, exhausted:false, callback:undefined }
-
-      $list.scroll(maybeLoadMore)
-
-      function load() {
-        if (state.loading || state.exhausted) return
-        state.loading = true
-        $list.addClass(prefixedClassName('loading'))
-        var stateId = state.id
-        loadFn(state.term, state.page, function(items) {
-          if (stateId !== state.id) return
-          if (state.page == 0) $list.empty()
-          state.page++
-          if (!items || items.length === 0) state.exhausted = true
-          $.each(items, function(ii, item) { appendItemFn(item, state.term) })
-          state.loading = false
-          if (!maybeLoadMore()) {
-            if (state.callback) state.callback()
-            state.callback = undefined
-            $list.removeClass(prefixedClassName('loading'))
-          }
-        })
-      }
-
-      function maybeLoadMore() {
-        if (state.exhausted) return false
-        var $lastChild = $list.children(':last')
-        if ($lastChild.size() === 0) {
-          load()
-          return true
-        } else {
-          var lastChildTop = $lastChild.offset().top - $list.offset().top
-          var lastChildVisible = lastChildTop < $list.outerHeight()
-          if (lastChildVisible) load()
-          return lastChildVisible
-        }
-      }
-
-      function newTerm(term, callback) {
-        state = { id:state.id+1, term:term, page:0, loading:false, exhausted:false, callback:callback }
-        load()
-      }
-      return { load:newTerm, check:maybeLoadMore }
-    }
-
-    function navigable($list, selectOnMouseEnter, $select) {
-      var skipMouseEvent = false
-      if(selectOnMouseEnter) {
-        $list.on('mouseenter', 'li:not(.disabled)', onMouseEnter)
-      } else {
-        $list.on('click', 'li:not(.disabled)', onMouseClick)
-      }
-
-      function next() {
-        var $next = current().next('li:not(.disabled)')
-        if (set($next)) ensureBottomVisible($next)
-      }
-      function prev() {
-        var $prev = current().prev('li:not(.disabled)')
-        if (set($prev)) ensureTopVisible($prev)
-      }
-      function current() {
-        return $list.find('.' + prefixedClassName('zelect__dropdown__current'))
-      }
-      function ensure(triggerMouseover) {
-        var $current = current()
-        if ($current.size() === 0) {
-          set($list.find('li:not(.disabled)').eq(0))
-        } else if (triggerMouseover) {
-          $select.trigger('mouseover', $current.data('zelect-item'))
-        }
-      }
-      function set($item) {
-        if ($item.size() === 0) return false
-        var $currentItem = current()
-        if ($currentItem.size() > 0) {
-          $currentItem.removeClass(prefixedClassName('zelect__dropdown__current'))
-          $select.trigger('mouseout', $currentItem.data('zelect-item'))
-        }
-        $item.addClass(prefixedClassName('zelect__dropdown__current'))
-        $select.trigger('mouseover', $item.data('zelect-item'))
-        return true
-      }
-      function onMouseEnter() {
-        if (skipMouseEvent) {
-          skipMouseEvent = false
-          return
-        }
-        set($(this))
-      }
-      function onMouseClick() {
-        set($(this))
-      }
-
-      function itemTop($item) {
-        return $item.offset().top - $list.offset().top
-      }
-      function ensureTopVisible($item) {
-        var scrollTop = $list.scrollTop()
-        var offset = itemTop($item) + scrollTop
-        if (scrollTop > offset) {
-          moveScroll(offset)
-        }
-      }
-      function ensureBottomVisible($item) {
-        var scrollBottom = $list.height()
-        var itemBottom = itemTop($item) + $item.outerHeight()
-        if (scrollBottom < itemBottom) {
-          moveScroll($list.scrollTop() + itemBottom - scrollBottom)
-        }
-      }
-      function moveScroll(offset) {
-        $list.scrollTop(offset)
-        skipMouseEvent = true
-      }
-      return { next:next, prev:prev, current:current, ensure:ensure, ensureTopVisible:ensureTopVisible }
-    }
   }
 
   $.fn.zelectItem = callInstance('zelectItem')
