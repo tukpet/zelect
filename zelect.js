@@ -270,9 +270,9 @@
         var skipMouseEvent = false
 
         if(selectOnMouseEnter) {
-          $list.on('mouseenter', visibleItemSelector, onMouseEnter)
+          $list.on('mouseenter', 'li', onMouseEnter)
         } else {
-          $list.on('click', visibleItemSelector, onMouseClick)
+          $list.on('click', 'li', onMouseClick)
         }
 
         function next() {
@@ -309,11 +309,12 @@
           if (skipMouseEvent) {
             skipMouseEvent = false
             return
+          } else if (!$(this).hasClass(dropdownFillerClassName)) {
+            set($(this))
           }
-          set($(this))
         }
         function onMouseClick() {
-          set($(this))
+          if (!$(this).hasClass(dropdownFillerClassName)) set($(this))
         }
 
         function itemTop($item) {
