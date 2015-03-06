@@ -127,6 +127,7 @@
         $search.val('')
         itemHandler.load('', function() {
           initialSelection(false)
+          $select.trigger('change')
         })
       }
 
