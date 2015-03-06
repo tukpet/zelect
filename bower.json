@@ -1,6 +1,6 @@
 {
   "name": "zelect",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "main": "./zelect.js",
   "ignore": [".gitignore", "*.yml", "*.json", "*.html", "*.md", "*.sh", "test.js"]
 }
